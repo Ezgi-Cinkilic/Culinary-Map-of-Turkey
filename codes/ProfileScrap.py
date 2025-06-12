@@ -99,50 +99,53 @@ def scrape_user_profile(profile_url, max_retries=3):
 
 
 def main():
-    def main():
-        try:
-            # Yeni tarif verilerini oku
-            recipes_df = pd.read_csv('../datas/recipes_combined.csv')
-            yeni_usernames = set(recipes_df['profil_adi'].dropna().unique())
-        except FileNotFoundError:
-            print("recipes_combined.csv bulunamadı.")
-            return
-        except KeyError:
-            print("'profil_adi' sütunu bulunamadı.")
-            return
+    BATCH_SIZE = 2000  # Her seferde çekilecek profil sayısı
+    try:
+        # Yeni tarif verilerini oku
+        recipes_df = pd.read_csv('../datas/recipes_combined.csv')
+        yeni_usernames = set(recipes_df['profil_adi'].dropna().unique())
+    except FileNotFoundError:
+        print("recipes_combined.csv bulunamadı.")
+        return
+    except KeyError:
+        print("'profil_adi' sütunu bulunamadı.")
+        return
 
-        # Mevcut profilleri oku
-        try:
-            mevcut_profiles_df = pd.read_csv('../datas/profiles.csv')
-            mevcut_usernames = set(mevcut_profiles_df['profil_adi'].dropna().unique())
-            print(f"{len(mevcut_usernames)} profil zaten mevcut.")
-        except FileNotFoundError:
-            mevcut_usernames = set()
-            mevcut_profiles_df = pd.DataFrame()
-            print("profiles.csv bulunamadı, sıfırdan başlıyoruz.")
+    profiles_path = '../datas/profiles.csv'
+    try:
+        mevcut_profiles_df = pd.read_csv('../datas/profiles.csv')
+        mevcut_usernames = set(mevcut_profiles_df['profil_adi'].dropna().unique())
+        print(f"{len(mevcut_usernames)} profil zaten mevcut.")
+    except FileNotFoundError:
+        mevcut_usernames = set()
+        mevcut_profiles_df = pd.DataFrame()
+        print("profiles.csv bulunamadı, sıfırdan başlıyoruz.")
 
-        # Yeni kullanıcıları belirle
-        eksik_usernames = list(yeni_usernames - mevcut_usernames)
-        print(f"{len(eksik_usernames)} yeni profil indirilecek.")
+    # Yeni kullanıcıları belirle
+    eksik_usernames = list(yeni_usernames - mevcut_usernames)
+    print(f"{len(eksik_usernames)} yeni profil indirilecek.")
 
-        tum_profiller = []
+    batch_usernames = eksik_usernames[:BATCH_SIZE]
+    print(f"{len(batch_usernames)} profil şimdi çekilecek...")
 
-        for i, username in enumerate(eksik_usernames, start=1):
-            profile_url = f"https://www.nefisyemektarifleri.com/u/{username}/"
-            print(f"[{i}/{len(eksik_usernames)}] Scraping: {profile_url}")
-            veri = scrape_user_profile(profile_url)
-            if veri:
-                tum_profiller.append(veri)
-            time.sleep(random.uniform(1.0, 3.0))
+    tum_profiller = []
+    for i, username in enumerate(batch_usernames, start=1):
+        profile_url = f"https://www.nefisyemektarifleri.com/u/{username}/"
+        print(f"[{i}/{len(batch_usernames)}] Scraping: {profile_url}")
+        veri = scrape_user_profile(profile_url)
+        if veri:
+            tum_profiller.append(veri)
+        time.sleep(random.uniform(0.5, 1.5))
 
-        # Yeni profilleri birleştir
-        if tum_profiller:
-            yeni_profiles_df = pd.DataFrame(tum_profiller)
-            yeni_profiles_df.to_csv('../datas/profiles_new.csv', index=False, encoding='utf-8')
-            print("yeni profiles_new.csv dosyasına kaydedildi.")
-        else:
-            print("Yeni profil verisi alınamadı.")
-
+    # 5. Kaydet
+    if tum_profiller:
+        yeni_profiles_df = pd.DataFrame(tum_profiller)
+        guncel_df = pd.concat([mevcut_profiles_df, yeni_profiles_df], ignore_index=True)
+        guncel_df.drop_duplicates(subset='profil_adi', keep='first', inplace=True)
+        guncel_df.to_csv(profiles_path, index=False, encoding='utf-8')
+        print(f"{len(tum_profiller)} yeni profil eklendi. Toplam kayıt: {guncel_df.shape[0]}")
+    else:
+        print("Yeni profil verisi alınamadı.")
 
 if __name__ == "__main__":
     main()
