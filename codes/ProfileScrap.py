@@ -99,7 +99,7 @@ def scrape_user_profile(profile_url, max_retries=3):
 
 
 def main():
-    BATCH_SIZE = 2000  # Her seferde çekilecek profil sayısı
+    BATCH_SIZE = 10000  # Her seferde çekilecek profil sayısı
     try:
         # Yeni tarif verilerini oku
         recipes_df = pd.read_csv('../datas/recipes_combined.csv')
