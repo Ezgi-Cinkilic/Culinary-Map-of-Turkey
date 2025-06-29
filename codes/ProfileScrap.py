@@ -98,12 +98,38 @@ def scrape_user_profile(profile_url, max_retries=3):
     return None
 
 
+def normalize_username(name):
+    if pd.isna(name):
+        return ''
+    name = name.lower()
+    replacements = {
+        'ı': 'i',
+        'ş': 's',
+        'ğ': 'g',
+        'ü': 'u',
+        'ö': 'o',
+        'ç': 'c',
+        'İ': 'i',
+        'Ş': 's',
+        'Ğ': 'g',
+        'Ü': 'u',
+        'Ö': 'o',
+        'Ç': 'c',
+    }
+    for turk_char, eng_char in replacements.items():
+        name = name.replace(turk_char, eng_char)
+    return name
+
 def main():
     BATCH_SIZE = 10000  # Her seferde çekilecek profil sayısı
     try:
         # Yeni tarif verilerini oku
         recipes_df = pd.read_csv('../datas/recipes_combined.csv')
-        yeni_usernames = set(recipes_df['profil_adi'].dropna().unique())
+        # Orijinal ve normalize edilmiş profil adları
+        recipes_df['profil_adi_norm'] = recipes_df['profil_adi'].apply(normalize_username)
+        yeni_usernames_norm = set(recipes_df['profil_adi_norm'].dropna().unique())
+        # Orijinal isimlere normalize isimden erişim için sözlük
+        norm_to_original = {normalize_username(name): name for name in recipes_df['profil_adi'].dropna().unique()}
     except FileNotFoundError:
         print("recipes_combined.csv bulunamadı.")
         return
@@ -114,16 +140,20 @@ def main():
     profiles_path = '../datas/profiles.csv'
     try:
         mevcut_profiles_df = pd.read_csv('../datas/profiles.csv')
-        mevcut_usernames = set(mevcut_profiles_df['profil_adi'].dropna().unique())
-        print(f"{len(mevcut_usernames)} profil zaten mevcut.")
+        mevcut_profiles_df['profil_adi_norm'] = mevcut_profiles_df['profil_adi'].apply(normalize_username)
+        mevcut_usernames_norm = set(mevcut_profiles_df['profil_adi_norm'].dropna().unique())
+        print(f"{len(mevcut_usernames_norm)} profil zaten mevcut (normalize edilmiş).")
     except FileNotFoundError:
-        mevcut_usernames = set()
+        mevcut_usernames_norm = set()
         mevcut_profiles_df = pd.DataFrame()
         print("profiles.csv bulunamadı, sıfırdan başlıyoruz.")
 
-    # Yeni kullanıcıları belirle
-    eksik_usernames = list(yeni_usernames - mevcut_usernames)
-    print(f"{len(eksik_usernames)} yeni profil indirilecek.")
+    # Yeni kullanıcıları normalize edilmiş haliyle belirle
+    eksik_usernames_norm = list(yeni_usernames_norm - mevcut_usernames_norm)
+    print(f"{len(eksik_usernames_norm)} yeni profil indirilecek (normalize edilmiş).")
+
+    # Orijinal kullanıcı adlarını geri al
+    eksik_usernames = [norm_to_original[norm_name] for norm_name in eksik_usernames_norm]
 
     batch_usernames = eksik_usernames[:BATCH_SIZE]
     print(f"{len(batch_usernames)} profil şimdi çekilecek...")
@@ -142,6 +172,9 @@ def main():
         yeni_profiles_df = pd.DataFrame(tum_profiller)
         guncel_df = pd.concat([mevcut_profiles_df, yeni_profiles_df], ignore_index=True)
         guncel_df.drop_duplicates(subset='profil_adi', keep='first', inplace=True)
+        # normalize edilmiş sütunu kaydetmek istemezsen sil
+        if 'profil_adi_norm' in guncel_df.columns:
+            guncel_df.drop(columns=['profil_adi_norm'], inplace=True)
         guncel_df.to_csv(profiles_path, index=False, encoding='utf-8')
         print(f"{len(tum_profiller)} yeni profil eklendi. Toplam kayıt: {guncel_df.shape[0]}")
     else:

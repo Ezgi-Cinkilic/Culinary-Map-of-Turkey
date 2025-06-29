@@ -156,6 +156,7 @@ profiles_df_filtered = profiles_df[profiles_df['sehir_geojson'].notna()]
 
 # Kullanıcı sayısını hesapla
 sehir_counts = profiles_df_filtered['sehir_geojson'].value_counts().reset_index()
+recipes_df = pd.read_csv('../datas/recipes_combined.csv')
 sehir_counts.columns = ['il', 'kullanici_sayisi']
 
 print(sehir_counts)

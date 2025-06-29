@@ -47,7 +47,7 @@ print(tarif_sehir_df.head())
 # 9. (Opsiyonel) Kaydet
 # tarif_sehir_df.to_csv('../datas/tarif_sayilari_sehirli.csv', index=False, encoding='utf-8')
 """
-
+"""
 import pandas as pd
 
 def normalize_sehir(sehir):
@@ -85,4 +85,48 @@ sehir_sayilari.columns = ['sehir', 'kullanici_sayisi']
 sehir_sayilari = sehir_sayilari.sort_values(by='sehir').reset_index(drop=True)
 
 # 4. Yazdır
-print(sehir_sayilari)
+print(sehir_sayilari)       """
+
+import pandas as pd
+import random
+import time
+def normalize_username(name):
+    if pd.isna(name):
+        return ''
+    # Küçük harfe çevir
+    name = name.lower()
+    # Türkçe karakter düzeltme
+    replacements = {
+        'ı': 'i',
+        'ş': 's',
+        'ğ': 'g',
+        'ü': 'u',
+        'ö': 'o',
+        'ç': 'c',
+        'İ': 'i',
+        'Ş': 's',
+        'Ğ': 'g',
+        'Ü': 'u',
+        'Ö': 'o',
+        'Ç': 'c',
+    }
+    for turk_char, eng_char in replacements.items():
+        name = name.replace(turk_char, eng_char)
+    return name
+recipes_df = pd.read_csv('../datas/recipes_combined.csv')
+recipes_df['profil_adi_norm'] = recipes_df['profil_adi'].apply(normalize_username)
+mevcut_profiles_df = pd.read_csv('../datas/profiles.csv')
+yeni_usernames_norm = set(recipes_df['profil_adi_norm'].dropna().unique())
+
+if not mevcut_profiles_df.empty:
+    mevcut_profiles_df['profil_adi_norm'] = mevcut_profiles_df['profil_adi'].apply(normalize_username)
+    mevcut_usernames_norm = set(mevcut_profiles_df['profil_adi_norm'].dropna().unique())
+else:
+    mevcut_usernames_norm = set()
+eksik_usernames_norm = list(yeni_usernames_norm - mevcut_usernames_norm)
+print(f"{len(eksik_usernames_norm)} yeni profil indirilecek (normalize edilmiş).")
+# Normalize edilmiş ismi → orijinal isim sözlüğü
+norm_to_original = {normalize_username(name): name for name in recipes_df['profil_adi'].dropna().unique()}
+
+# Eksik kullanıcıların orijinal isimlerini al
+eksik_usernames = [norm_to_original[norm_name] for norm_name in eksik_usernames_norm]
