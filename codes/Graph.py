@@ -2,219 +2,125 @@ import pandas as pd
 import folium
 import json
 from folium.features import GeoJsonTooltip
-import branca.colormap as cm
 
-# Veri ve GeoJSON dosyalarını oku
+# Verileri yükle
 df = pd.read_csv('..//datas//CullinaryMapDataset.csv')
 with open('..//tr-cities-utf8.json', 'r', encoding='utf-8') as f:
     geojson_data = json.load(f)
 
-# İl bazında kullanıcı sayısı ve tarif sayısı hesapla
-kullanici_sayisi = df.groupby('eslesen_sehir')['profil_adi'].nunique().reset_index()
-kullanici_sayisi.columns = ['il', 'kullanici_sayisi']
+# Verileri hazırla
+df['il'] = df['eslesen_sehir']  # Sütun adını kontrol edin
 
-tarif_sayisi = df['eslesen_sehir'].value_counts().reset_index()
-tarif_sayisi.columns = ['il', 'tarif_sayisi']
+# Metrikleri hesapla
+kullanici_sayilari = df.groupby('il')['profil_adi'].nunique().to_dict()
+tarif_sayilari = df['il'].value_counts().to_dict()
 
-kullanici_dict = dict(zip(kullanici_sayisi['il'], kullanici_sayisi['kullanici_sayisi']))
-tarif_dict = dict(zip(tarif_sayisi['il'], tarif_sayisi['tarif_sayisi']))
+# GeoJSON'a verileri ekle
+for feature in geojson_data['features']:
+    il_adi = feature['properties']['name']
+    feature['properties']['kullanici'] = kullanici_sayilari.get(il_adi, 0)
+    feature['properties']['tarif'] = tarif_sayilari.get(il_adi, 0)
 
-kullanici_min, kullanici_max = kullanici_sayisi['kullanici_sayisi'].min(), kullanici_sayisi['kullanici_sayisi'].max()
-tarif_min, tarif_max = tarif_sayisi['tarif_sayisi'].min(), tarif_sayisi['tarif_sayisi'].max()
+# Haritayı oluştur
+m = folium.Map(location=[39, 35], zoom_start=6, tiles='cartodbpositron')
 
-kullanici_colormap = cm.LinearColormap(['white', 'red'], vmin=kullanici_min, vmax=kullanici_max)
-tarif_colormap = cm.LinearColormap(['white', 'red'], vmin=tarif_min, vmax=tarif_max)
+# 1. KATMAN: Kullanıcı Dağılımı (Kırmızı tonları)
+kullanici_colormap = folium.LinearColormap(
+    ['#ffebee', '#c62828'],
+    vmin=min(kullanici_sayilari.values()),
+    vmax=max(kullanici_sayilari.values())
+)
 
-m = folium.Map(location=[39, 35], zoom_start=6)
 
-# Style fonksiyonları
-def style_function_kullanici(feature):
-    il = feature['properties']['name']
-    val = kullanici_dict.get(il, 0)
+def kullanici_style(feature):
     return {
-        'fillColor': kullanici_colormap(val),
+        'fillColor': kullanici_colormap(feature['properties']['kullanici']),
         'color': 'black',
-        'weight': 0.5,
+        'weight': 1,
         'fillOpacity': 0.7
     }
 
-def style_function_tarif(feature):
-    il = feature['properties']['name']
-    val = tarif_dict.get(il, 0)
+
+kullanici_layer = folium.GeoJson(
+    geojson_data,
+    name='Kullanıcı Sayısı',
+    style_function=kullanici_style,
+    tooltip=GeoJsonTooltip(
+        fields=['name', 'kullanici', 'tarif'],
+        aliases=['Şehir:', 'Kullanıcı Sayısı:', 'Tarif Sayısı:'],
+        localize=True,
+        sticky=True,
+        styles="""
+            background-color: white;
+            border: 1px solid black;
+            border-radius: 3px;
+            padding: 5px;
+            font-size: 14px;
+        """
+    )
+).add_to(m)
+
+# 2. KATMAN: Tarif Dağılımı (Mavi tonları)
+tarif_colormap = folium.LinearColormap(
+    ['#e3f2fd', '#1565c0'],
+    vmin=min(tarif_sayilari.values()),
+    vmax=max(tarif_sayilari.values())
+)
+
+
+def tarif_style(feature):
     return {
-        'fillColor': tarif_colormap(val),
+        'fillColor': tarif_colormap(feature['properties']['tarif']),
         'color': 'black',
-        'weight': 0.5,
+        'weight': 1,
         'fillOpacity': 0.7
     }
 
-# Tooltip formatları (il + sayı)
-def tooltip_kullanici(feature):
-    il = feature['properties']['name']
-    val = kullanici_dict.get(il, 0)
-    return f"<b>İl:</b> {il}<br><b>Kullanıcı Sayısı:</b> {val}"
 
-def tooltip_tarif(feature):
-    il = feature['properties']['name']
-    val = tarif_dict.get(il, 0)
-    return f"<b>İl:</b> {il}<br><b>Tarif Sayısı:</b> {val}"
-
-# Kullanıcı katmanı
-kullanici_layer = folium.FeatureGroup(name='Kullanıcı Sayısı', show=True)
-
-geojson_kullanici = folium.GeoJson(
+tarif_layer = folium.GeoJson(
     geojson_data,
-    style_function=style_function_kullanici,
-    tooltip=folium.GeoJsonTooltip(
-        fields=[],
-        aliases=[],
-        labels=False,
-        sticky=True,
-        localize=True,
-        style="background-color: white; font-weight: bold;"
-    )
-)
-# Dinamik tooltip ayarı için JS ile güncelleme yapacağız
-geojson_kullanici.add_to(kullanici_layer)
-kullanici_layer.add_to(m)
+    name='Tarif Sayısı',
+    style_function=tarif_style,
+    show=False  # Başlangıçta gizli
+).add_to(m)
 
-# Tarif katmanı
-tarif_layer = folium.FeatureGroup(name='Tarif Sayısı', show=False)
-
-geojson_tarif = folium.GeoJson(
-    geojson_data,
-    style_function=style_function_tarif,
-    tooltip=folium.GeoJsonTooltip(
-        fields=[],
-        aliases=[],
-        labels=False,
-        sticky=True,
-        localize=True,
-        style="background-color: white; font-weight: bold;"
-    )
-)
-geojson_tarif.add_to(tarif_layer)
-tarif_layer.add_to(m)
-
-# Colormap'lar (legend)
-kullanici_colormap.caption = 'Kullanıcı Sayısı'
-kullanici_colormap.add_to(m)
-
-tarif_colormap.caption = 'Tarif Sayısı'
-tarif_colormap.add_to(m)
-
-# Layer Control
+# Katman kontrol paneli
 folium.LayerControl(collapsed=False).add_to(m)
 
-# Dinamik tooltip ve tek katman görünürlüğü için JS kodu
+# Çift renk skalalı lejant ekle
+m.get_root().html.add_child(folium.Element('''
+<style>
+    #legend {
+        position: fixed;
+        bottom: 50px;
+        left: 50px;
+        z-index: 1000;
+        padding: 10px;
+        background: white;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        max-width: 200px;
+    }
+    .legend-item {
+        margin-bottom: 10px;
+    }
+    .legend-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+</style>
 
-js = f'''
-<script>
-    // GeoJson feature ları ve veriler
-    var kullaniciData = {json.dumps(kullanici_dict)};
-    var tarifData = {json.dumps(tarif_dict)};
+<div id="legend">
+    <div class="legend-item">
+        <div class="legend-title">Kullanıcı Sayısı</div>
+        ''' + kullanici_colormap._repr_html_() + '''
+    </div>
+    <div class="legend-item">
+        <div class="legend-title">Tarif Sayısı</div>
+        ''' + tarif_colormap._repr_html_() + '''
+    </div>
+</div>
+'''))
 
-    // Kullanıcı ve Tarif layer referansları
-    var kullaniciLayerName = 'Kullanıcı Sayısı';
-    var tarifLayerName = 'Tarif Sayısı';
-
-    // LayerControl inputları (radio gibi yapıldı)
-    var inputs = document.querySelectorAll('.leaflet-control-layers-selector');
-    inputs.forEach(input => {{
-        input.type = 'radio';
-        input.name = 'base-map-layer';
-    }});
-
-    // Önce tüm katmanları alın
-    var layerMap = {{}};
-    inputs.forEach(input => {{
-        var label = input.nextSibling.textContent.trim();
-        layerMap[label] = input;
-    }});
-
-    // Harita ve GeoJson'lar
-    var map = window.map; // Folium'dan gelen map objesi
-
-    // Katmanları bulmak için Leaflet layerlar
-    var allLayers = [];
-    map.eachLayer(layer => {{
-        if (layer.feature) {{
-            allLayers.push(layer);
-        }}
-    }});
-
-    // Tüm tooltipleri kapat
-    function closeAllTooltips() {{
-        allLayers.forEach(layer => {{
-            layer.unbindTooltip();
-        }});
-    }}
-
-    // Tooltip gösterme fonksiyonu
-    function showTooltip(layer, content) {{
-        layer.bindTooltip(content, {{sticky:true, className: "custom-tooltip"}}).openTooltip();
-    }}
-
-    // Her feature için tooltip ayarla
-    function setTooltip(layer, type) {{
-        var il = layer.feature.properties.name;
-        var val = 0;
-        if(type === 'kullanici') {{
-            val = kullaniciData[il] || 0;
-            var content = '<b>İl:</b> ' + il + '<br><b>Kullanıcı Sayısı:</b> ' + val;
-            showTooltip(layer, content);
-        }} else if(type === 'tarif') {{
-            val = tarifData[il] || 0;
-            var content = '<b>İl:</b> ' + il + '<br><b>Tarif Sayısı:</b> ' + val;
-            showTooltip(layer, content);
-        }}
-    }}
-
-    // Katmanların görünürlük durumunu ayarla, tooltipleri güncelle
-    function updateLayers(selectedLayerName) {{
-        allLayers.forEach(layer => {{
-            var layerName = layer.options && layer.options.name;
-            if(!layerName) {{
-                // GeoJson Layer ise
-                var parent = layer._map._layers;
-                // Ancak biz zaten feature layerlar üzerinde çalışıyoruz, burayı boş bırakıyoruz
-            }}
-        }});
-        // Kullanıcı layer görünür ise sadece o tooltip aktif
-        if(selectedLayerName === kullaniciLayerName) {{
-            map.removeLayer(tarifLayer);
-            map.addLayer(kullaniciLayer);
-
-            kullaniciLayer.eachLayer(function(layer) {{
-                setTooltip(layer, 'kullanici');
-            }});
-        }} else if(selectedLayerName === tarifLayerName) {{
-            map.removeLayer(kullaniciLayer);
-            map.addLayer(tarifLayer);
-
-            tarifLayer.eachLayer(function(layer) {{
-                setTooltip(layer, 'tarif');
-            }});
-        }}
-    }}
-
-    // Başlangıçta kullanıcı katmanı tooltipleri ayarlansın
-    kullaniciLayer.eachLayer(function(layer) {{
-        setTooltip(layer, 'kullanici');
-    }});
-
-    // LayerControl'daki seçim değişince katmanları ve tooltipleri güncelle
-    inputs.forEach(input => {{
-        input.addEventListener('change', function() {{
-            updateLayers(this.nextSibling.textContent.trim());
-        }});
-    }});
-
-</script>
-'''
-
-m.get_root().html.add_child(folium.Element(js))
-
-# Kaydet
-m.save('..//turkiye_katmanli_radio_harita_dinamik_tooltip.html')
-print("Harita kaydedildi: turkiye_katmanli_radio_harita_dinamik_tooltip.html")
+m.save('..//turkiye_kullanici_tarif_haritasi.html')
+print("Harita başarıyla oluşturuldu!")
