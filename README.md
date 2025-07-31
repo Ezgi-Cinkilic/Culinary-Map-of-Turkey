@@ -73,7 +73,7 @@ Anket tabanlı geleneksel çalışmalardan farklı olarak, bu proje **gerçek ku
 ## 🧠 Kümeleme Sonuçları
 
 ### 📍 4 Küme - TF-IDF Temelli, Quenn, Networkx, AZP(10)
-![Türkiye Lezzet Haritası](visuals/choropleth_turkey.png)
+![Türkiye Lezzet Haritası](graphs/TürkiyeLezzetBölgeleri.PNG)
 1. **Geleneksel & Ana Yemek Odaklı**  
    + Pilav, köfte, tavuk  
    – Kurabiye, sandviç, pasta
