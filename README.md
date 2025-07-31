@@ -71,7 +71,8 @@ Anket tabanlı geleneksel çalışmalardan farklı olarak, bu proje **gerçek ku
 ---
 
 ## 🧠 Kümeleme Sonuçları
-
+- Queen komşuluk matrisi ve AZP (Automatic Zoning Procedure) ile coğrafi bütünlük korunarak kümeler yeniden düzenlenmiştir.  
+- Bölgesel bütünlük sağlanmış ve kültürel yakın iller birlikte gruplanmıştır.
 ### 📍 4 Küme - TF-IDF Temelli, Quenn, Networkx, AZP(10)
 ![Türkiye Lezzet Haritası](graphs/TürkiyeLezzetBölgeleri.PNG)
 0**Geleneksel & Ana Yemek Odaklı**  
@@ -89,27 +90,3 @@ Anket tabanlı geleneksel çalışmalardan farklı olarak, bu proje **gerçek ku
 3**Belirsiz / Düşük Verili Bölge**  
    + Sıcak içecekler öne çıkmış  
    – Kebap, mantı gibi özel yemekler düşük temsil nedeniyle ayrışamadı
-
-### 📌 Coğrafi Kümeleme
-
-- Queen komşuluk matrisi ve AZP (Automatic Zoning Procedure) ile coğrafi bütünlük korunarak kümeler yeniden düzenlenmiştir.  
-- Bölgesel bütünlük sağlanmış ve kültürel yakın iller birlikte gruplanmıştır.
-
----
-
-## 📍 Öne Çıkan Bulgular
-
-- Pastane ürünleri (kurabiye, poğaça, pasta) bazı şehirlerde aşırı baskın hale gelmiş, bu da kümelenmeyi büyük oranda etkilemiştir.  
-- Deniz ürünleri, kebap gibi bazı yöresel kategoriler yetersiz veri nedeniyle zayıf temsil edilmiştir.  
-- Yalnızca tarif sayıları değil, **kategori çeşitliliği ve yoğunluk oranları** analiz edilerek daha dengeli karşılaştırmalar yapılmıştır.  
-
----
-
-## 🔬 Katkı Sağlayanlar
-
-- 👩‍💻 Ezgi Cinkılıç – Veri toplama, ön işleme, analiz, görselleştirme, raporlama
-
----
-
-## 📂 Klasör Yapısı (Önerilen)
-
