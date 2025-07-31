@@ -2,9 +2,14 @@
 
 ## 📌 Proje Tanımı
 
-Bu proje, **tarif paylaşım platformlarından elde edilen verilerle Türkiye’nin il bazlı dijital yemek haritasını oluşturmayı** amaçlamaktadır. Nefis Yemek Tarifleri platformundaki tarif ve kullanıcı verileri kullanılarak, **bölgelere özgü yemek türleri**, **yöresel mutfak farklılıkları** ve **lezzet yoğunlukları** analiz edilecektir.
+Bu proje, **tarif paylaşım platformlarından elde edilen verilerle Türkiye’nin il bazlı dijital yemek haritasını oluşturmayı** amaçlamaktadır.  
+Nefis Yemek Tarifleri platformundaki **800 binden fazla tarif** ve **35 bini aşkın kullanıcı profili** analiz edilerek,  
+- **bölgelere özgü yemek türleri**,  
+- **yöresel mutfak farklılıkları**  
+- ve **lezzet yoğunlukları**  
+coğrafi olarak görselleştirilmiştir.
 
-Amaç, Türkiye genelinde tariflerin türlerine göre nasıl bir dağılım gösterdiğini **veri madenciliği**, **coğrafi veri analizi** ve **görselleştirme** yöntemleriyle ortaya koymaktır.
+Anket tabanlı geleneksel çalışmalardan farklı olarak, bu proje **gerçek kullanıcı davranışlarına** dayanan büyük ölçekli veriyi analiz etmektedir.
 
 ---
 
@@ -29,65 +34,82 @@ Amaç, Türkiye genelinde tariflerin türlerine göre nasıl bir dağılım gös
 
 ## 🧩 Yöntemler ve Araçlar
 
-**Veri Toplama**  
-- `Web Scraping` (BeautifulSoup)  
+### 🔍 Veri Toplama
+- Web Scraping (BeautifulSoup)
 - Hedef site: [Nefis Yemek Tarifleri](https://www.nefisyemektarifleri.com/tarifler/)
 
-**Veri Temizleme ve Ön İşleme**  
-- Etiket/Kategori standardizasyonu  
-- One-Hot Encoding  
-- Malzeme listesi işleme  
-- İl bilgisi eşleme
+### 🧹 Veri Ön İşleme
+- Fuzzy string matching ile şehir bilgisi temizleme
+- One-Hot Encoding
+- Kategori & alt kategori standardizasyonu
+- Malzeme listesi analizi (TF-IDF, Bag-of-Ingredients)
 
-**Analiz ve Görselleştirme**  
-- `GeoPandas`, `Folium` → Harita çizimleri  
-- `Matplotlib`, `Seaborn` → Grafikler  
-- `Choropleth Map` → Bölgesel yoğunluk gösterimi  
-- `TF-IDF`, `Bag-of-Words`, `Bag-of-Ingredients` → Metin/malzeme analizi
+### 📈 Veri Analizi & Görselleştirme
+- Pandas, NumPy, Matplotlib, Seaborn  
+- GeoPandas, Folium, Choropleth Haritalar  
+- TF-IDF, Z-score, MI score, Networkx (coğrafi yakınlık)  
+- PCA & StandardScaler ile boyut indirgeme
 
-**Makine Öğrenmesi**  
-- `K-Means`, `Hiyerarşik Kümeleme` → Bölgesel kümeleme  
-- (Opsiyonel) `XGBoost`, `Neural Networks` → Supervised modeller ile malzeme-tarif analizi
-
----
-
-## 📊 Elde Edilecek Veriler
-
-### Tarif Sayfası  
-- Tarif Başlığı  
-- Kategori ve Etiketler  
-- Malzemeler ve miktarlar  
-- Pişirme / Hazırlık süreleri  
-- Porsiyon sayısı  
-- Tarif açıklaması  
-- Yorumlar ve puanlar  
-- Tarif görselleri  
-
-### Kullanıcı Profil Sayfası  
-- Kullanıcı adı  
-- Katılım tarihi  
-- Toplam tarif sayısı  
-- Takipçi sayısı  
-- Yaşanılan şehir  
-- Paylaşılan tarif listesi  
+### 🧠 Makine Öğrenmesi
+- K-Means Clustering
+- Hiyerarşik Kümeleme (Agglomerative)
+- Coğrafi kümelenme (Queen adjacency + AZP modeli)
 
 ---
 
+## 📊 Veriseti Özeti
 
-## 🗓 Zaman Çizelgesi
-
-| Tarih Aralığı             | Yapılacak İş                                    |
-|---------------------------|-------------------------------------------------|
-| 31 Mayıs – 17 Haziran     | Literatür taraması ve veri toplama              |
-| 18 Haziran – 24 Haziran   | Veri ön işleme                                  |
-| 25 Haziran – 30 Haziran   | Veri analizi ve temel görselleştirme            |
-| 01 Temmuz – 14 Temmuz     | Metotların uygulanması (K-Means vb.)            |
-| 15 Temmuz – 20 Temmuz     | Sonuçların analizi ve sunum hazırlığı           |
-| 21 veya 24 Temmuz         | Sözlü sunum                                     |
-| 22 Temmuz – 29 Temmuz     | Rapor yazımı                                    |
-| 31 Temmuz                 | Final rapor teslimi                             |
+| Veri Türü | Miktar |
+|-----------|--------|
+| Toplam Tarif | 800.140 |
+| Toplam Kullanıcı Profili | 78.892 |
+| İl Bilgisi Bulunan Profil | 35.436 |
+| Eşleşen Profil Sayısı | 21.807 |
+| Eşleşen Tarif Sayısı | 321.312 |
+| Geçerli Kategori Sayısı | 68 |
 
 ---
 
-Herhangi bir soru, öneri ya da iş birliği için benimle iletişime geçebilirsiniz.  
-Teşekkürler! 🙌
+## 🧠 Kümeleme Sonuçları
+
+### 📍 4 Küme - TF-IDF Temelli, Quenn, Networkx, AZP(10)
+![Türkiye Lezzet Haritası](visuals/choropleth_turkey.png)
+1. **Geleneksel & Ana Yemek Odaklı**  
+   + Pilav, köfte, tavuk  
+   – Kurabiye, sandviç, pasta
+
+2. **Hazır/Pratik & Geleneksel Atıştırmalık**  
+   + Kek, hoşaf, sulu yemek  
+   – Kırmızı et, zeytinyağlılar
+
+3. **Tatlı & Şerbet Odaklı**  
+   + Şerbetli tatlılar, sandviç  
+   – Sebze yemekleri, zeytinyağlılar
+
+4. **Belirsiz / Düşük Verili Bölge**  
+   + Sıcak içecekler öne çıkmış  
+   – Kebap, mantı gibi özel yemekler düşük temsil nedeniyle ayrışamadı
+
+### 📌 Coğrafi Kümeleme
+
+- Queen komşuluk matrisi ve AZP (Automatic Zoning Procedure) ile coğrafi bütünlük korunarak kümeler yeniden düzenlenmiştir.  
+- Bölgesel bütünlük sağlanmış ve kültürel yakın iller birlikte gruplanmıştır.
+
+---
+
+## 📍 Öne Çıkan Bulgular
+
+- Pastane ürünleri (kurabiye, poğaça, pasta) bazı şehirlerde aşırı baskın hale gelmiş, bu da kümelenmeyi büyük oranda etkilemiştir.  
+- Deniz ürünleri, kebap gibi bazı yöresel kategoriler yetersiz veri nedeniyle zayıf temsil edilmiştir.  
+- Yalnızca tarif sayıları değil, **kategori çeşitliliği ve yoğunluk oranları** analiz edilerek daha dengeli karşılaştırmalar yapılmıştır.  
+
+---
+
+## 🔬 Katkı Sağlayanlar
+
+- 👩‍💻 Ezgi Cinkılıç – Veri toplama, ön işleme, analiz, görselleştirme, raporlama
+
+---
+
+## 📂 Klasör Yapısı (Önerilen)
+
