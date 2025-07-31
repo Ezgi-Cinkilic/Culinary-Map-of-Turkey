@@ -75,18 +75,18 @@ Anket tabanlı geleneksel çalışmalardan farklı olarak, bu proje **gerçek ku
 - Bölgesel bütünlük sağlanmış ve kültürel yakın iller birlikte gruplanmıştır.
 ### 📍 4 Küme - TF-IDF Temelli, Quenn, Networkx, AZP(10)
 ![Türkiye Lezzet Haritası](graphs/TürkiyeLezzetBölgeleri.PNG)
-0.**Geleneksel & Ana Yemek Odaklı**  
-   + Pilav, köfte, tavuk  
+0. **Geleneksel & Ana Yemek Odaklı**  
+   \+ Pilav, köfte, tavuk  
    – Kurabiye, sandviç, pasta
 
-1.**Hazır/Pratik & Geleneksel Atıştırmalık**  
-   + Kek, hoşaf, sulu yemek  
+1. **Hazır/Pratik & Geleneksel Atıştırmalık**  
+   \+ Kek, hoşaf, sulu yemek  
    – Kırmızı et, zeytinyağlılar
 
-2.**Tatlı & Şerbet Odaklı**  
-   + Şerbetli tatlılar, sandviç  
+2. **Tatlı & Şerbet Odaklı**  
+   \+ Şerbetli tatlılar, sandviç  
    – Sebze yemekleri, zeytinyağlılar
 
-3.**Belirsiz / Düşük Verili Bölge**  
-   + Sıcak içecekler öne çıkmış  
+3. **Belirsiz / Düşük Verili Bölge**  
+   \+ Sıcak içecekler öne çıkmış  
    – Kebap, mantı gibi özel yemekler düşük temsil nedeniyle ayrışamadı
