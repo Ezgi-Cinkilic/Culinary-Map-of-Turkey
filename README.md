@@ -81,7 +81,7 @@ Anket tabanlı geleneksel çalışmalardan farklı olarak, bu proje **gerçek ku
 
 1. **Hazır/Pratik & Geleneksel Atıştırmalık**  
    \+ Kek, hoşaf, sulu yemek  
-   – Kırmızı et, zeytinyağlılar
+   – Kırmızı et, zeytinyağlılar 
 
 2. **Tatlı & Şerbet Odaklı**  
    \+ Şerbetli tatlılar, sandviç  
